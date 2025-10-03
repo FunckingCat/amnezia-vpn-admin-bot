@@ -11,7 +11,7 @@ def load_config(config_path='config/credentials.properties'):
     except FileNotFoundError:
         raise Exception(f"Configuration file not found: {config_path}")
     
-    required_keys = ['bot.token', 'server.ip', 'server.user', 'server.password']
+    required_keys = ['bot.token', 'server.ip']
     missing_keys = [key for key in required_keys if key not in config]
     
     if missing_keys:

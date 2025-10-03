@@ -7,11 +7,7 @@ class VPNService:
     def __init__(self, config):
         self.config = config
         self.pincode_manager = PincodeManager()
-        self.wireguard_manager = WireGuardManager(
-            config['server.ip'],
-            config['server.user'],
-            config['server.password']
-        )
+        self.wireguard_manager = WireGuardManager(use_docker_direct=True)
         self.config_generator = ConfigGenerator(config['server.ip'])
     
     def validate_pincode(self, pincode):
@@ -54,7 +50,8 @@ class VPNService:
             'config_filename': config_filename,
             'qr_code': qr_code,
             'server_ip': self.config['server.ip'],
-            'server_port': server_info['port']
+            'server_port': server_info['port'],
+            'public_key': public_key
         }
     
     def get_active_peers(self):

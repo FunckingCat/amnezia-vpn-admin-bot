@@ -2,25 +2,26 @@
 
 set -e
 
-SERVER_IP=$(grep 'server.ip' config/credentials.properties | cut -d'=' -f2)
+SERVER_IP="72.56.67.251"
+SERVER_PASSWORD="pJ1BB7AiU+_tyM"
 
 echo "Deploying to $SERVER_IP..."
 
 echo "Creating deployment package..."
 tar czf bot-deploy.tar.gz \
+    --exclude='*.pyc' \
+    --exclude='__pycache__' \
     src/ \
     config/ \
     main.py \
     requirements.txt \
-    Dockerfile \
-    --exclude='*.pyc' \
-    --exclude='__pycache__'
+    Dockerfile
 
 echo "Uploading files..."
-scp -o StrictHostKeyChecking=no bot-deploy.tar.gz root@$SERVER_IP:/tmp/
+sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no bot-deploy.tar.gz root@$SERVER_IP:/tmp/
 
 echo "Deploying on server..."
-ssh -o StrictHostKeyChecking=no root@$SERVER_IP << 'EOF'
+sshpass -p "$SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no root@$SERVER_IP << 'EOF'
 cd /opt
 rm -rf amnezia-vpn-bot
 mkdir -p amnezia-vpn-bot
@@ -41,10 +42,10 @@ docker run -d \
   --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -p 5000:5000 \
-  amnezia-vpn-admin-bot python main.py --mode both
+  amnezia-vpn-admin-bot python main.py --mode both --api-port 5000
 
 echo "Deployment complete!"
-sleep 2
+sleep 3
 docker logs amnezia-vpn-bot
 EOF
 
