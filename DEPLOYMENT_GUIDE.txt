@@ -1,0 +1,150 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         AMNEZIA VPN ADMIN BOT - DEPLOYMENT GUIDE                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ARCHITECTURE                                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+    ┌──────────┐       ┌──────────────┐       ┌─────────────┐
+    │  Admin   │──────▶│  Telegram    │──────▶│   Bot       │
+    │  gives   │       │     Bot      │       │ (Docker)    │
+    │ pincode  │       │              │       │             │
+    └──────────┘       └──────────────┘       └──────┬──────┘
+                                                      │
+                                                      │ SSH
+                                                      ▼
+    ┌──────────┐       ┌──────────────┐       ┌─────────────┐
+    │   User   │◀──────│     File     │◀──────│  VPN Server │
+    │ receives │       │  + QR Code   │       │  72.56.67   │
+    │  config  │       │              │       │   .251      │
+    └──────────┘       └──────────────┘       └──────┬──────┘
+                                                      │
+                                                      │ Docker
+                                                      ▼
+                                               ┌─────────────┐
+                                               │  AmneziaWG  │
+                                               │  Container  │
+                                               │ amnezia-awg │
+                                               └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ DEPLOYMENT STEPS                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+1️⃣  VERIFY CREDENTIALS
+   $ cat credentials.properties
+   ✓ Bot token present
+   ✓ Server IP correct
+   ✓ Server password correct
+
+2️⃣  TEST PINCODE GENERATION
+   $ python3 test_pincode.py
+   Current Time: 2025-10-03 21:59:19
+   Current Pincode: 142132
+
+3️⃣  DEPLOY TO SERVER
+   $ ./deploy-to-server.sh
+   ✓ Building package...
+   ✓ Uploading to server...
+   ✓ Building Docker image...
+   ✓ Starting container...
+
+4️⃣  VERIFY DEPLOYMENT
+   $ ssh root@72.56.67.251 'docker ps'
+   CONTAINER ID   IMAGE                    STATUS
+   abc123...      amnezia-vpn-admin-bot    Up 2 seconds
+
+5️⃣  TEST IN TELEGRAM
+   - Open bot
+   - Send /start
+   - Enter pincode
+   - Receive config
+
+┌─────────────────────────────────────────────────────────────────┐
+│ PINCODE EXAMPLES                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+   Date/Time             Input        Output
+   ──────────────────────────────────────────
+   Oct 03, 21:00      → 031021   →  142132
+   Oct 03, 22:00      → 031022   →  142133
+   Oct 04, 00:00      → 041000   →  152111
+   Oct 09, 09:00      → 091009   →  191119
+
+   Rule: Each digit +1, except 9 stays 9
+
+┌─────────────────────────────────────────────────────────────────┐
+│ MONITORING COMMANDS                                              │
+└─────────────────────────────────────────────────────────────────┘
+
+   View bot logs:
+   $ ssh root@72.56.67.251 'docker logs -f amnezia-vpn-bot'
+
+   Check VPN status:
+   $ ssh root@72.56.67.251 'docker exec amnezia-awg wg show'
+
+   List containers:
+   $ ssh root@72.56.67.251 'docker ps'
+
+   Restart bot:
+   $ ssh root@72.56.67.251 'docker restart amnezia-vpn-bot'
+
+┌─────────────────────────────────────────────────────────────────┐
+│ CLIENT RECEIVES                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+   1. Configuration File (.conf)
+      └─ Import to AmneziaWG desktop app
+
+   2. QR Code (PNG)
+      └─ Scan with AmneziaWG mobile app
+
+   3. Details Message
+      ├─ Username: John_20251003_215959
+      ├─ IP: 10.8.1.X
+      └─ Server: 72.56.67.251:42619
+
+┌─────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+   Problem: Bot not responding
+   Solution: $ ssh root@72.56.67.251 'docker restart amnezia-vpn-bot'
+
+   Problem: Wrong pincode
+   Solution: $ python3 test_pincode.py
+
+   Problem: Can't SSH to server
+   Solution: Check credentials.properties
+
+   Problem: No available IPs
+   Solution: Remove unused peers or expand network
+
+┌─────────────────────────────────────────────────────────────────┐
+│ FILES OVERVIEW                                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+   bot.py                      → Main bot logic
+   requirements.txt            → Python dependencies
+   Dockerfile                  → Container build
+   credentials.properties      → Server credentials
+   deploy-to-server.sh         → Deployment script
+   test_pincode.py            → Pincode tester
+   README.md                  → Full documentation
+   QUICKSTART.md              → Quick guide
+
+┌─────────────────────────────────────────────────────────────────┐
+│ QUICK COMMANDS                                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+   Deploy:          ./deploy-to-server.sh
+   Get pincode:     python3 test_pincode.py
+   View logs:       ssh root@72.56.67.251 'docker logs -f amnezia-vpn-bot'
+   Check status:    ssh root@72.56.67.251 'docker ps'
+   Restart:         ssh root@72.56.67.251 'docker restart amnezia-vpn-bot'
+
+╔══════════════════════════════════════════════════════════════════╗
+║                       READY TO DEPLOY!                           ║
+║                  Run: ./deploy-to-server.sh                      ║
+╚══════════════════════════════════════════════════════════════════╝

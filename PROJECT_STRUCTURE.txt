@@ -1,0 +1,190 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              REFACTORED PROJECT STRUCTURE                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+amnezia-vpn-admin-bot/
+│
+├── 📁 src/                              # Source code
+│   ├── __init__.py
+│   │
+│   ├── 📁 presentation/                 # 🎨 PRESENTATION LAYER
+│   │   ├── __init__.py
+│   │   └── telegram_bot.py             # Telegram bot handlers
+│   │
+│   ├── 📁 business/                     # 💼 BUSINESS LOGIC LAYER
+│   │   ├── __init__.py
+│   │   ├── pincode_manager.py          # Pincode generation/validation
+│   │   ├── wireguard_manager.py        # SSH & WireGuard operations
+│   │   └── config_generator.py         # Config & QR generation
+│   │
+│   ├── 📁 service/                      # 🔧 SERVICE LAYER
+│   │   ├── __init__.py
+│   │   └── vpn_service.py              # Business logic aggregator
+│   │
+│   └── config_loader.py                # Configuration loader
+│
+├── 📁 scripts/                          # Utility scripts
+│   ├── deploy.sh                       # Local deployment
+│   ├── deploy-to-server.sh             # Remote deployment
+│   └── test_pincode.py                 # Pincode tester
+│
+├── 📁 config/                           # Configuration files
+│   ├── credentials.properties          # Server credentials
+│   └── credentials.properties.example  # Template
+│
+├── main.py                             # 🚀 Application entry point
+├── requirements.txt                    # Python dependencies
+├── Dockerfile                          # Docker configuration
+│
+└── 📚 Documentation
+    ├── README.md                       # Main documentation
+    ├── ARCHITECTURE.md                 # Architecture details
+    ├── QUICKSTART.md                   # Quick start guide
+    ├── PROJECT_SUMMARY.md              # Project summary
+    └── DEPLOYMENT_GUIDE.txt            # Deployment guide
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      LAYER RESPONSIBILITIES                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🎨 PRESENTATION LAYER (src/presentation/)                       │
+├─────────────────────────────────────────────────────────────────┤
+│ • Handle Telegram commands and messages                         │
+│ • Manage user interaction flow                                  │
+│ • Format responses and send files                               │
+│ • No business logic                                             │
+│                                                                  │
+│ Files:                                                           │
+│   telegram_bot.py - TelegramBot class with handlers             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔧 SERVICE LAYER (src/service/)                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ • Aggregate business logic components                           │
+│ • Provide clean API for presentation                            │
+│ • Orchestrate operations                                        │
+│ • Handle high-level errors                                      │
+│                                                                  │
+│ Files:                                                           │
+│   vpn_service.py - VPNService class (Facade pattern)            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 💼 BUSINESS LOGIC LAYER (src/business/)                         │
+├─────────────────────────────────────────────────────────────────┤
+│ • Core business rules and operations                            │
+│ • Independent components                                        │
+│ • No UI knowledge                                               │
+│                                                                  │
+│ Files:                                                           │
+│   pincode_manager.py    - Pincode logic                         │
+│   wireguard_manager.py  - VPN server integration                │
+│   config_generator.py   - Config & QR creation                  │
+└─────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════╗
+║                         DATA FLOW                                ║
+╚══════════════════════════════════════════════════════════════════╝
+
+User Input
+    ↓
+┌─────────────────────┐
+│  telegram_bot.py    │  🎨 Presentation: Receives pincode
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│   vpn_service.py    │  🔧 Service: Validates & orchestrates
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ pincode_manager.py  │  💼 Business: Validates pincode
+└─────────────────────┘
+           ↓
+┌─────────────────────┐
+│ wireguard_manager   │  💼 Business: Creates keys, assigns IP
+└─────────────────────┘
+           ↓
+┌─────────────────────┐
+│ config_generator    │  💼 Business: Creates config & QR
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│   vpn_service.py    │  🔧 Service: Returns complete result
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│  telegram_bot.py    │  🎨 Presentation: Sends files to user
+└─────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      KEY IMPROVEMENTS                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+✅ Separation of Concerns
+   Each layer has specific responsibility
+
+✅ Maintainability
+   Easy to find and modify code
+
+✅ Testability
+   Each component can be tested independently
+
+✅ Extensibility
+   Easy to add new features without breaking existing code
+
+✅ Clean Dependencies
+   Clear dependency flow: Presentation → Service → Business
+
+✅ Reusability
+   Business logic can be used in other interfaces
+
+✅ Organized Structure
+   Python files and scripts in separate directories
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      QUICK COMMANDS                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Test pincode:
+  $ python3 scripts/test_pincode.py
+
+Run locally:
+  $ python main.py
+
+Deploy:
+  $ ./scripts/deploy-to-server.sh
+
+Check logs:
+  $ ssh root@SERVER 'docker logs -f amnezia-vpn-bot'
+
+Compile check:
+  $ python3 -m py_compile main.py src/**/*.py
+
+╔══════════════════════════════════════════════════════════════════╗
+║                   ARCHITECTURE BENEFITS                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📦 MODULARITY
+   Each module is independent and focused
+
+🧪 TESTABILITY
+   Easy to write unit tests for each layer
+
+🔌 EXTENSIBILITY
+   Add features without modifying existing code
+
+📖 READABILITY
+   Clear structure makes code easy to understand
+
+🛡️ MAINTAINABILITY
+   Changes isolated to specific layers
+
+🎯 SINGLE RESPONSIBILITY
+   Each class has one clear purpose
+
+╔══════════════════════════════════════════════════════════════════╗
+║                        READY TO USE!                             ║
+║                 Run: python main.py                              ║
+╚══════════════════════════════════════════════════════════════════╝
